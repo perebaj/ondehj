@@ -2,11 +2,11 @@ package event
 
 import (
 	"context"
-	"database/sql"
-	"errors"
+	"fmt"
+	"log"
 	"time"
 
-	"github.com/jackc/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Event struct {
@@ -19,38 +19,45 @@ type Event struct {
 	InstagramPage string
 }
 
-//create a json for the event
- 
-
-var ErrEventAlreadyExists = errors.New("event already exists")
-
 type Repository interface {
 	Create(ctx context.Context, event Event) (*Event, error)
+	Migrate() error
 }
 
 type SQLRepository struct {
-	db *sql.DB
+	db *pgxpool.Pool
 }
 
-func NewSQLRepository(db *sql.DB) *SQLRepository {
+func EventSQLRepository(db *pgxpool.Pool) *SQLRepository {
 	return &SQLRepository{db: db}
 }
 
 func (r *SQLRepository) Create(ctx context.Context, event Event) (*Event, error) {
 	var id int64
-	err := r.db.QueryRowContext(ctx, `
-		INSET INTO events (title, description, location, instagram_page, start_time, end_time) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+	err := r.db.QueryRow(ctx, `
+		INSERT INTO events (title, description, location, instagram_page, start_time, end_time) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
 		event.Title, event.Description, event.Location, event.InstagramPage, event.StartTime, event.EndTime).Scan(&id)
 	if err != nil {
-		var pgxError *pgconn.PgError
-		if errors.As(err, &pgxError) {
-			if pgxError.Code == "23505" { // unique_violation
-				return nil, ErrEventAlreadyExists
-			}
-		}
-
+		log.Println(err)
 		return nil, err
 	}
 	event.ID = id
 	return &event, nil
+}
+
+func (r *SQLRepository) Migrate() error {
+	query := `
+		CREATE TABLE events (
+			id SERIAL PRIMARY KEY,
+			title TEXT NOT NULL,
+			description TEXT,
+			location TEXT,
+			start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+			end_time TIMESTAMP WITH TIME ZONE NOT NULL,
+			instagram_page TEXT
+		);
+	`
+	fmt.Println("Creating events table...")
+	_, err := r.db.Exec(context.Background(), query)
+	return err
 }
