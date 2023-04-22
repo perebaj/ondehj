@@ -2,11 +2,16 @@ package event
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+var (
+	ErrDeleteFailed = errors.New("Delete failed")
 )
 
 type Event struct {
@@ -22,6 +27,8 @@ type Event struct {
 type Repository interface {
 	Create(ctx context.Context, event Event) (*Event, error)
 	Migrate() error
+	Delete(ctx context.Context, id int64) error
+	All(ctx context.Context) ([]Event, error)
 }
 
 type SQLRepository struct {
@@ -60,4 +67,31 @@ func (r *SQLRepository) Migrate() error {
 	fmt.Println("Creating events table...")
 	_, err := r.db.Exec(context.Background(), query)
 	return err
+}
+
+func (r *SQLRepository) Delete(ctx context.Context, id int64) error {
+	res, err := r.db.Exec(ctx, `DELETE FROM events WHERE id = $1`, id)
+	rowsAffcected := res.RowsAffected()
+	if rowsAffcected == 0 {
+		return ErrDeleteFailed
+	}
+	return err
+}
+
+func (r *SQLRepository) All(ctx context.Context) ([]Event, error) {
+	rows, err := r.db.Query(ctx, `SELECT * FROM events`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var events []Event
+	for rows.Next() {
+		var event Event
+		err = rows.Scan(&event.ID, &event.Title, &event.Description, &event.Location, &event.StartTime, &event.EndTime, &event.InstagramPage)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, event)
+	}
+	return events, nil
 }
