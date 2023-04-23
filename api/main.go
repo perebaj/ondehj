@@ -86,7 +86,13 @@ func getAllEventsHandler(eventRepo event.Repository) http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		fmt.Println(events)
+		eventJson, err := json.Marshal(events)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Error marshalling events", http.StatusInternalServerError)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(eventJson)
 	}
 	return http.HandlerFunc(fn)
 }
@@ -118,6 +124,52 @@ func getByIDHandler(eventRepo event.Repository) http.HandlerFunc {
 	return http.HandlerFunc(fn)
 }
 
+func Update(eventRepo event.Repository) http.HandlerFunc {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Update")
+		fmt.Println("Update event")
+		if r.Method != http.MethodPut {
+			fmt.Println("Method not allowed")
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		var newEvent event.Event
+		err := json.NewDecoder(r.Body).Decode(&newEvent)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		idStr := mux.Vars(r)["id"]
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Invalid id", http.StatusBadRequest)
+		}
+
+		_, err = eventRepo.GetByID(r.Context(), id)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Event not found", http.StatusNotFound)
+			return
+		}
+		updatedEvent, err := eventRepo.Update(r.Context(), id, newEvent)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Update failed", http.StatusInternalServerError)
+			return
+		}
+		updatedEventJson, err := json.Marshal(updatedEvent)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Error marshalling events", http.StatusInternalServerError)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(updatedEventJson)
+	}
+	return http.HandlerFunc(fn)
+}
+
 func HandlerFactory(db *pgxpool.Pool) http.Handler {
 	//Group all handler of the API and return a http.Handler
 	router := mux.NewRouter()
@@ -128,6 +180,7 @@ func HandlerFactory(db *pgxpool.Pool) http.Handler {
 	router.HandleFunc(eventPath, postCreateEventHandler(eventSQLRepo)).Methods(http.MethodPost)
 	router.HandleFunc(eventPathId, deleteEventHandler(eventSQLRepo)).Methods(http.MethodDelete)
 	router.HandleFunc(eventPathId, getByIDHandler(eventSQLRepo)).Methods(http.MethodGet)
+	router.HandleFunc(eventPathId, Update(eventSQLRepo)).Methods(http.MethodPut)
 
 	return router
 }

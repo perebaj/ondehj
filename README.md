@@ -17,6 +17,21 @@ curl -X POST \
 curl -X DELETE -i http://localhost:8080/event/{id} 
 ```
 
+```bash
+curl -X PUT \
+  -i http://localhost:8080/event/2 \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "title": "Novo título",
+        "description": "Nova descrição",
+        "location": "Nova localização",
+        "start_time": "2023-05-01T10:00:00Z",
+        "end_time": "2023-05-01T12:00:00Z",
+        "instagram_page": "nova_pagina"
+      }'
+
+```
+
 ## Database approach
 
 ## Core Concepts 

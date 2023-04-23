@@ -15,13 +15,13 @@ var (
 )
 
 type Event struct {
-	ID            int64
-	Title         string
-	Description   string
-	Location      string
-	StartTime     time.Time
-	EndTime       time.Time
-	InstagramPage string
+	ID            int64     `json:"id"`
+	Title         string    `json:"title"`
+	Description   string    `json:"description"`
+	Location      string    `json:"location"`
+	StartTime     time.Time `json:"start_time"`
+	EndTime       time.Time `json:"end_time"`
+	InstagramPage string    `json:"instagram_page"`
 }
 
 type Repository interface {
@@ -30,6 +30,7 @@ type Repository interface {
 	Delete(ctx context.Context, id int64) error
 	All(ctx context.Context) ([]Event, error)
 	GetByID(ctx context.Context, id int64) (*Event, error)
+	Update(ctx context.Context, id int64, newEvent Event) (*Event, error)
 }
 
 type SQLRepository struct {
@@ -38,6 +39,22 @@ type SQLRepository struct {
 
 func EventSQLRepository(db *pgxpool.Pool) *SQLRepository {
 	return &SQLRepository{db: db}
+}
+
+func (r *SQLRepository) Update(ctx context.Context, id int64, newEvent Event) (*Event, error) {
+
+	err := r.db.QueryRow(ctx,
+		`UPDATE events SET title = $1, description = $2, location = $3, instagram_page = $4, start_time = $5, end_time = $6 WHERE id = $7 RETURNING id`,
+		newEvent.Title, newEvent.Description, newEvent.Location, newEvent.InstagramPage, newEvent.StartTime, newEvent.EndTime, id).Scan(
+		&newEvent.ID)
+
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	newEvent.ID = id
+	return &newEvent, nil
+
 }
 
 func (r *SQLRepository) GetByID(ctx context.Context, id int64) (*Event, error) {

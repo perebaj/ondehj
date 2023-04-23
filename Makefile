@@ -1,7 +1,16 @@
 # Makefile
 
-
+GO_VERSION=1.20.2
 POSTGRES_VERSION := 14
+version=$(shell git rev-parse --short HEAD)
+image := perebaj/ondehj:$(version)
+
+#build image service
+.PHONY: image
+image:
+	docker build . \
+	--build-arg GO_VERSION=$(GO_VERSION) \
+	-t ${image} 
 
 ## Start containers
 .PHONY: dev/start
