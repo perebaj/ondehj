@@ -4,29 +4,38 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/perebaj/ondehj/event"
 )
 
 const (
-	eventPath = "/event"
+	eventPath   = "/event"
+	eventPathId = "/event/{id}"
 )
 
-func eventHandler(eventRepo event.Repository) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			fmt.Println("Event GET handler")
-			getAllEventsHandler(eventRepo)(w, r)
-		case http.MethodPost:
-			fmt.Println("Event POST handler")
-			postCreateEventHandler(eventRepo)(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+func deleteEventHandler(eventRepo event.Repository) http.HandlerFunc {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("deleteEventHandler")
+		idStr := mux.Vars(r)["id"]
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Invalid id", http.StatusBadRequest)
+		}
+
+		fmt.Println("Deleting event with id: ", idStr)
+		err = eventRepo.Delete(r.Context(), id)
+
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Delete failed", http.StatusInternalServerError)
+			return
 		}
 	}
-
+	return http.HandlerFunc(fn)
 }
 
 func postCreateEventHandler(eventRepo event.Repository) http.HandlerFunc {
@@ -78,10 +87,13 @@ func getAllEventsHandler(eventRepo event.Repository) http.HandlerFunc {
 
 func HandlerFactory(db *pgxpool.Pool) http.Handler {
 	//Group all handler of the API and return a http.Handler
-	mux := http.NewServeMux()
+	router := mux.NewRouter()
 	eventSQLRepo := event.EventSQLRepository(db)
 
-	eventHandler := eventHandler(eventSQLRepo)
-	mux.Handle(eventPath, eventHandler)
-	return mux
+	//event
+	router.HandleFunc(eventPath, getAllEventsHandler(eventSQLRepo)).Methods(http.MethodGet)
+	router.HandleFunc(eventPath, postCreateEventHandler(eventSQLRepo)).Methods(http.MethodPost)
+	router.HandleFunc(eventPathId, deleteEventHandler(eventSQLRepo)).Methods(http.MethodDelete)
+
+	return router
 }

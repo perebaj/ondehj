@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -21,6 +22,6 @@ func main() {
 	defer dbpool.Close()
 
 	mux := api.HandlerFactory(dbpool)
-	fmt.Println("Starting server on port 8080")
-	http.ListenAndServe(":8080", mux)
+	fmt.Println("Starting server on port 8000")
+	log.Fatal(http.ListenAndServe(":8000", mux))
 }
