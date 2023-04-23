@@ -9,6 +9,5 @@ RUN make ondehoje
 #final stage
 FROM alpine:3.17.2
 RUN apk --no-cache add ca-certificates
-COPY --from=builder /app/cmd/ondehoje /app/ondehoje
-# RUN chmod +x ./app/ondehoje
-CMD ["/app/ondehoje/ondehoje"]
+COPY --from=builder /app/cmd/ondehoje /app/cmd/ondehoje
+CMD ["/app/cmd/ondehoje/ondehoje"]

@@ -2,6 +2,7 @@ version: '3'
 
 services:
   db:
+    restart: unless-stopped
     image: postgres:${POSTGRES_VERSION}
     environment:
       POSTGRES_USER: postgres
@@ -11,6 +12,30 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - net
+  # app:
+  #   restart: unless-stopped
+  #   build:
+  #     context: .
+  #     args:
+  #       GO_VERSION: ${GO_VERSION}
+  #   environment:
+  #     - POSTGRES_HOST=db
+  #   volumes:
+  #     - .:/app
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     - db
+  #   networks:
+  #     - net
 
 volumes:
   postgres_data:
+    # app_data:
+
+
+networks:
+  net:
+    driver: bridge

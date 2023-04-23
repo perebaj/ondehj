@@ -1,5 +1,8 @@
 # ondehj
 
+
+
+
 ```go
 go run cmd/ondehoje/main.go
 ```
@@ -40,3 +43,4 @@ curl -X PUT \
 * Database Migration
 * Structured Logs
 * Metrics
+* Dev Container environment
