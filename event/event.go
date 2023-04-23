@@ -52,7 +52,6 @@ func (r *SQLRepository) Update(ctx context.Context, id int64, newEvent Event) (*
 		log.Println(err)
 		return nil, err
 	}
-	newEvent.ID = id
 	return &newEvent, nil
 
 }
