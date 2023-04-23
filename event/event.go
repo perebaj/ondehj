@@ -29,6 +29,7 @@ type Repository interface {
 	Migrate() error
 	Delete(ctx context.Context, id int64) error
 	All(ctx context.Context) ([]Event, error)
+	GetByID(ctx context.Context, id int64) (*Event, error)
 }
 
 type SQLRepository struct {
@@ -37,6 +38,19 @@ type SQLRepository struct {
 
 func EventSQLRepository(db *pgxpool.Pool) *SQLRepository {
 	return &SQLRepository{db: db}
+}
+
+func (r *SQLRepository) GetByID(ctx context.Context, id int64) (*Event, error) {
+	var event Event
+	err := r.db.QueryRow(
+		ctx,
+		`SELECT id, title, description, location, start_time, end_time, instagram_page FROM events WHERE id = $1`, id).Scan(&event.ID, &event.Title, &event.Description, &event.Location, &event.StartTime, &event.EndTime, &event.InstagramPage)
+
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return &event, nil
 }
 
 func (r *SQLRepository) Create(ctx context.Context, event Event) (*Event, error) {

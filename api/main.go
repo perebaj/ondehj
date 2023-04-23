@@ -19,6 +19,11 @@ const (
 func deleteEventHandler(eventRepo event.Repository) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("deleteEventHandler")
+		if r.Method != http.MethodDelete {
+			fmt.Println("Method not allowed")
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
 		idStr := mux.Vars(r)["id"]
 		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
@@ -43,7 +48,8 @@ func postCreateEventHandler(eventRepo event.Repository) http.HandlerFunc {
 		fmt.Println("postCreateEventHandler")
 
 		if r.Method != http.MethodPost {
-			w.WriteHeader(http.StatusMethodNotAllowed)
+			fmt.Println("Method not allowed")
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 		var event event.Event
@@ -71,7 +77,7 @@ func getAllEventsHandler(eventRepo event.Repository) http.HandlerFunc {
 		fmt.Println("getAllEventsHandler")
 		fmt.Println("Get all events")
 		if r.Method != http.MethodGet {
-			w.WriteHeader(http.StatusMethodNotAllowed)
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 		events, err := eventRepo.All(r.Context())
@@ -85,6 +91,33 @@ func getAllEventsHandler(eventRepo event.Repository) http.HandlerFunc {
 	return http.HandlerFunc(fn)
 }
 
+func getByIDHandler(eventRepo event.Repository) http.HandlerFunc {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("getByIDHandler")
+		fmt.Println("Get event by id")
+		if r.Method != http.MethodGet {
+			fmt.Println("Method not allowed")
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		idStr := mux.Vars(r)["id"]
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Invalid id", http.StatusBadRequest)
+		}
+
+		event, err := eventRepo.GetByID(r.Context(), id)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Event not found", http.StatusNotFound)
+			return
+		}
+		fmt.Println(event)
+	}
+	return http.HandlerFunc(fn)
+}
+
 func HandlerFactory(db *pgxpool.Pool) http.Handler {
 	//Group all handler of the API and return a http.Handler
 	router := mux.NewRouter()
@@ -94,6 +127,7 @@ func HandlerFactory(db *pgxpool.Pool) http.Handler {
 	router.HandleFunc(eventPath, getAllEventsHandler(eventSQLRepo)).Methods(http.MethodGet)
 	router.HandleFunc(eventPath, postCreateEventHandler(eventSQLRepo)).Methods(http.MethodPost)
 	router.HandleFunc(eventPathId, deleteEventHandler(eventSQLRepo)).Methods(http.MethodDelete)
+	router.HandleFunc(eventPathId, getByIDHandler(eventSQLRepo)).Methods(http.MethodGet)
 
 	return router
 }
