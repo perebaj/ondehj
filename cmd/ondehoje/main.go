@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/perebaj/ondehj/api"
+	"golang.org/x/exp/slog"
 	// concurrency safe
 )
 
@@ -45,15 +45,28 @@ func main() {
 		settings.DatabaseHost,
 		settings.DatabasePort,
 	)
-	fmt.Printf("Connecting to database: %s", databaseUrl)
+	slog.Info(slog.LevelInfo.String())
+	logger := slog.New(slog.NewJSONHandler(os.Stdout))
+	slog.SetDefault(logger)
+
 	dbpool, err := pgxpool.New(context.Background(), databaseUrl)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to create connection pool: %v\n", err)
 		os.Exit(1)
 	}
+	err = dbpool.Ping(context.Background())
+	if err != nil {
+		slog.Error(fmt.Sprintf("Unable to ping database: %v\n", err))
+		os.Exit(1)
+	}
+	slog.Info("Connected successfully to database")
 	defer dbpool.Close()
 
 	mux := api.HandlerFactory(dbpool)
-	fmt.Printf("Starting server on port %s \n", settings.ServicePort)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", settings.ServicePort), mux))
+	slog.Info(fmt.Sprintf("Starting server on port %s", settings.ServicePort))
+	err = http.ListenAndServe(fmt.Sprintf(":%s", settings.ServicePort), mux)
+	if err != nil {
+		slog.Error(fmt.Sprintf("Unable to start server: %v", err))
+		os.Exit(1)
+	}
 }
