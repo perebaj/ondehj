@@ -6,10 +6,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool" // concurrency safe
 	"github.com/perebaj/ondehj/api"
 	"golang.org/x/exp/slog"
-	// concurrency safe
 )
 
 func getEnvWithDefault(key, defaultValue string) string {
@@ -46,7 +45,8 @@ func main() {
 		settings.DatabasePort,
 	)
 	slog.Info(slog.LevelInfo.String())
-	logger := slog.New(slog.NewJSONHandler(os.Stdout))
+	handler := slog.HandlerOptions{AddSource: true, Level: slog.LevelInfo}.NewJSONHandler(os.Stdout)
+	logger := slog.New(handler)
 	slog.SetDefault(logger)
 
 	dbpool, err := pgxpool.New(context.Background(), databaseUrl)
