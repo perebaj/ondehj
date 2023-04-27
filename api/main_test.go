@@ -63,59 +63,51 @@ type MockEvent interface {
 }
 
 func Test_postCreateEventHandler(t *testing.T) {
-	eventExample := &event.Event{
-		Title:         "Example Event JOjo is here",
-		Description:   "This is an example event.",
-		Location:      "New York City",
-		StartTime:     time.Now(),
-		EndTime:       time.Now(),
-		InstagramPage: "example_event",
+	testCases := []struct {
+		name               string
+		event              *event.Event
+		extectedStatusCode int
+		method             string
+	}{
+		{
+			name: "Create event",
+			event: &event.Event{
+				Title:         "Example Event JOjo is here",
+				Description:   "This is an example event.",
+				Location:      "New York City",
+				StartTime:     time.Now(),
+				EndTime:       time.Now(),
+				InstagramPage: "example_event",
+			},
+			extectedStatusCode: 200,
+			method:             "POST",
+		},
+		{
+			name:               "Invalid method",
+			event:              &event.Event{},
+			extectedStatusCode: 405,
+			method:             "GET",
+		},
 	}
-	// convert the event to a JSON string
-	eventJson, err := json.Marshal(eventExample)
-	if err != nil {
-		fmt.Println("Error marshaling event:", err)
-		return
-	}
-	eventString := string(eventJson)
 
-	mockRepo := NewMockSQLRepository()
-	mockRepo.On("Create", mock.Anything, mock.Anything).Return(eventExample, nil)
-	resultHandlerFunc := postCreateEventHandler(mockRepo)
-	req := httptest.NewRequest("POST", "/events", strings.NewReader(eventString))
-	w := httptest.NewRecorder()
-	resultHandlerFunc.ServeHTTP(w, req) // doing the fake request
-	res := w.Result()                   // capturing the response
-	assert.Equal(t, 200, res.StatusCode)
-	// t.Log(res.StatusCode)
-	// defer res.Body.Close()
-	// data, err := ioutil.ReadAll(res.Body)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-	// t.Log(string(data))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// convert the event to a JSON string
+			eventJson, err := json.Marshal(tc.event)
+			if err != nil {
+				fmt.Println("Error marshaling event:", err)
+				return
+			}
+			eventString := string(eventJson)
+
+			mockRepo := NewMockSQLRepository()
+			mockRepo.On("Create", mock.Anything, mock.Anything).Return(tc.event, nil)
+			resultHandlerFunc := postCreateEventHandler(mockRepo)
+			req := httptest.NewRequest(tc.method, "/events", strings.NewReader(eventString))
+			w := httptest.NewRecorder()
+			resultHandlerFunc.ServeHTTP(w, req) // doing the fake request
+			res := w.Result()                   // capturing the response
+			assert.Equal(t, tc.extectedStatusCode, res.StatusCode)
+		})
+	}
 }
-
-// func Test_postCreateEventHandler(t *testing.T) {
-// 	type args struct {
-// 		eventRepo event.Repository
-// 	}
-// 	type want struct {
-// 		status int
-// 	}
-// 	tests := []struct {
-// 		name  string
-// 		args  args
-// 		event event.Event
-// 		want  want
-// 	}{
-// 		// TODO: Add test cases.
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			if got := postCreateEventHandler(tt.args.eventRepo); !reflect.DeepEqual(got, tt.want) {
-// 				t.Errorf("postCreateEventHandler() = %v, want %v", got, tt.want)
-// 			}
-// 		})
-// 	}
-// }
