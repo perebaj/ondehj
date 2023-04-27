@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http/httptest"
@@ -9,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/perebaj/ondehj/event"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -66,7 +68,7 @@ func Test_postCreateEventHandler(t *testing.T) {
 	testCases := []struct {
 		name               string
 		event              *event.Event
-		extectedStatusCode int
+		expectedStatusCode int
 		method             string
 	}{
 		{
@@ -79,7 +81,7 @@ func Test_postCreateEventHandler(t *testing.T) {
 				EndTime:       time.Now(),
 				InstagramPage: "example_event",
 			},
-			extectedStatusCode: 200,
+			expectedStatusCode: 200,
 			method:             "POST",
 		},
 		{
@@ -92,19 +94,32 @@ func Test_postCreateEventHandler(t *testing.T) {
 				EndTime:       time.Now(),
 				InstagramPage: "jojo",
 			},
-			extectedStatusCode: 405,
+			expectedStatusCode: 405,
 			method:             "GET",
 		},
 		{
 			name:               "Empty event",
 			event:              nil,
-			extectedStatusCode: 400,
+			expectedStatusCode: 400,
 			method:             "POST",
 		},
 		{
 			name:               "Empty event2",
 			event:              &event.Event{},
-			extectedStatusCode: 400,
+			expectedStatusCode: 400,
+			method:             "POST",
+		},
+		{
+			name: "Empty title",
+			event: &event.Event{
+				Title:         "",
+				Description:   "Jojo mage",
+				Location:      "Jojo Town",
+				StartTime:     time.Now(),
+				EndTime:       time.Now(),
+				InstagramPage: "jojo",
+			},
+			expectedStatusCode: 400,
 			method:             "POST",
 		},
 	}
@@ -126,7 +141,129 @@ func Test_postCreateEventHandler(t *testing.T) {
 			w := httptest.NewRecorder()
 			resultHandlerFunc.ServeHTTP(w, req) // doing the fake request
 			res := w.Result()                   // capturing the response
-			assert.Equal(t, tc.extectedStatusCode, res.StatusCode)
+			assert.Equal(t, tc.expectedStatusCode, res.StatusCode)
 		})
 	}
+}
+
+func Test_deleteEventHandler(t *testing.T) {
+	type deleteReturn struct {
+		err error // error to be returned by the mock repo when Delete is called
+	}
+	type getByIdReturn struct {
+		event *event.Event // event to be returned by the mock repo when GetByID is called
+		err   error        // error to be returned by the mock repo when GetByID is called
+	}
+	testCases := []struct {
+		name               string        //subtest name
+		deleteReturn       deleteReturn  // return values for the mock repo's Delete method
+		getByIdReturn      getByIdReturn // return values for the mock repo's GetByID method
+		expectedStatusCode int
+		method             string
+		requestIdParam     string
+		deleteError        error
+	}{
+		{
+			name: "Delete event",
+			getByIdReturn: getByIdReturn{
+				err: nil,
+				event: &event.Event{
+					ID:            2,
+					Title:         "Example Event JOjo is here",
+					Description:   "This is an example event.",
+					Location:      "New York City",
+					StartTime:     time.Now(),
+					EndTime:       time.Now(),
+					InstagramPage: "example_event",
+				},
+			},
+			deleteReturn: deleteReturn{
+				err: nil,
+			},
+			expectedStatusCode: 200,
+			method:             "DELETE",
+			requestIdParam:     "2",
+		},
+		{
+			name:               "Invalid method",
+			expectedStatusCode: 405,
+			method:             "GET",
+			requestIdParam:     "2",
+			deleteReturn: deleteReturn{
+				err: nil,
+			},
+			getByIdReturn: getByIdReturn{
+				err:   nil,
+				event: &event.Event{},
+			},
+		},
+		{
+			name:               "Invalid parameter value",
+			method:             "DELETE",
+			requestIdParam:     "invalid",
+			expectedStatusCode: 400,
+			deleteReturn: deleteReturn{
+				err: nil,
+			},
+			getByIdReturn: getByIdReturn{
+				err:   nil,
+				event: &event.Event{},
+			},
+		},
+		{
+			name:               "Event not found",
+			method:             "DELETE",
+			requestIdParam:     "2",
+			expectedStatusCode: 404,
+			getByIdReturn: getByIdReturn{
+				err:   sql.ErrNoRows,
+				event: nil,
+			},
+			deleteReturn: deleteReturn{
+				err: nil,
+			},
+		},
+		{
+			name: "Delete failed",
+
+			deleteReturn: deleteReturn{
+				err: event.ErrDeleteFailed,
+			},
+			getByIdReturn: getByIdReturn{
+				err: nil,
+				event: &event.Event{
+					ID:            2,
+					Title:         "Example Event JOjo is here",
+					Description:   "This is an example event.",
+					Location:      "New York City",
+					StartTime:     time.Now(),
+					EndTime:       time.Now(),
+					InstagramPage: "example_event",
+				},
+			},
+
+			method:             "DELETE",
+			requestIdParam:     "2",
+			expectedStatusCode: 500,
+			deleteError:        event.ErrDeleteFailed,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepo := NewMockSQLRepository()
+			mockRepo.On("GetByID", mock.Anything, mock.Anything).Return(tc.getByIdReturn.event, tc.getByIdReturn.err)
+			mockRepo.On("Delete", mock.Anything, mock.Anything).Return(tc.deleteReturn.err)
+
+			resultHandlerFunc := deleteEventHandler(mockRepo)
+			fmt.Printf("/events/%s", tc.requestIdParam)
+
+			req := httptest.NewRequest(tc.method, "/event/"+tc.requestIdParam, nil)
+			req = mux.SetURLVars(req, map[string]string{"id": tc.requestIdParam})
+			w := httptest.NewRecorder()
+			resultHandlerFunc.ServeHTTP(w, req) // doing the fake request
+			res := w.Result()                   // capturing the response
+			assert.Equal(t, tc.expectedStatusCode, res.StatusCode)
+		})
+	}
+
 }

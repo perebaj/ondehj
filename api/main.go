@@ -63,6 +63,7 @@ func postCreateEventHandler(eventRepo event.Repository) http.HandlerFunc {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
+		// Decode the request body into a Event struct
 		var requestEvent event.Event
 		err := json.NewDecoder(r.Body).Decode(&requestEvent)
 		if err != nil {
@@ -70,8 +71,10 @@ func postCreateEventHandler(eventRepo event.Repository) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		if requestEvent == (event.Event{}) {
-			slog.Error("Empty event")
+		// Validate the request body
+		if requestEvent == (event.Event{}) || requestEvent.Title == "" {
+			// If event is empty or title is empty, return an error
+			slog.Error("Invalid Event")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
