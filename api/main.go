@@ -63,16 +63,21 @@ func postCreateEventHandler(eventRepo event.Repository) http.HandlerFunc {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		var event event.Event
-		err := json.NewDecoder(r.Body).Decode(&event)
+		var requestEvent event.Event
+		err := json.NewDecoder(r.Body).Decode(&requestEvent)
 		if err != nil {
 			slog.Error("Error decoding event", "error", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		if requestEvent == (event.Event{}) {
+			slog.Error("Empty event")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 
 		slog.Info("Creating event")
-		createdEvent, err := eventRepo.Create(r.Context(), event)
+		createdEvent, err := eventRepo.Create(r.Context(), requestEvent)
 		if err != nil {
 			slog.Error("Error creating new Event", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)

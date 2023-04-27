@@ -83,10 +83,29 @@ func Test_postCreateEventHandler(t *testing.T) {
 			method:             "POST",
 		},
 		{
-			name:               "Invalid method",
-			event:              &event.Event{},
+			name: "Invalid method",
+			event: &event.Event{
+				Title:         "JOJO is awesome",
+				Description:   "Jojo mage",
+				Location:      "Jojo Town",
+				StartTime:     time.Now(),
+				EndTime:       time.Now(),
+				InstagramPage: "jojo",
+			},
 			extectedStatusCode: 405,
 			method:             "GET",
+		},
+		{
+			name:               "Empty event",
+			event:              nil,
+			extectedStatusCode: 400,
+			method:             "POST",
+		},
+		{
+			name:               "Empty event2",
+			event:              &event.Event{},
+			extectedStatusCode: 400,
+			method:             "POST",
 		},
 	}
 
