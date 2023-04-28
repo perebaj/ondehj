@@ -7,19 +7,25 @@ on:
     branches: ["main"]
 
 jobs:
-  test-build-and-publish:
+  test:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v3
       - name: Run Tests
         run: make test
+
+  build-and-publish:
+    if: github.event_name == 'push' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
       - name: Build the Docker image
-        if: github.event_name == 'push' && github.event.pull_request.merged == true
+        if: github.event_name == 'push' && github.event.pull_request.merged == true && github.ref == 'refs/heads/main'
         run: make image
       - name: Push the Docker image
-        if: github.event_name == 'push' && github.event.pull_request.merged == true
+        if: github.event_name == 'push' && github.event.pull_request.merged == true && github.ref == 'refs/heads/main'
         run: make push
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
