@@ -29,6 +29,12 @@ image:
 	--build-arg GO_VERSION=$(GO_VERSION) \
 	-t ${image} 
 
+## Push image service
+.PHONY: publish
+push:
+	docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+	docker push ${image}
+
 ## Run ondehoje service
 .PHONY: run
 run:
