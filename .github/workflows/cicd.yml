@@ -1,4 +1,4 @@
-name: Close Pull Request
+name: Docker Image CI
 
 # only trigger on pull request closed events
 on:
@@ -6,18 +6,24 @@ on:
     types: [closed]
 
 jobs:
-  merge_job:
-    # this job will only run if the PR has been merged
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+      - name: Run Tests
+        run: make test
+
+  build-and-publish:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          echo PR #${{ github.event.number }} has been merged
-
-  close_job:
-    # this job will only run if the PR has been closed without being merged
-    if: github.event.pull_request.merged == false
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          echo PR #${{ github.event.number }} has been closed without being merged
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+      - name: Build the Docker image
+        run: make image
+      - name: Push the Docker image
+        run: make publish
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
