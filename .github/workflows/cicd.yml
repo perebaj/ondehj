@@ -8,6 +8,7 @@ on:
 
 jobs:
   test:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
@@ -22,10 +23,8 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v3
       - name: Build the Docker image
-        if: github.event_name == 'push' && github.event.pull_request.merged == true && github.ref == 'refs/heads/main'
         run: make image
       - name: Push the Docker image
-        if: github.event_name == 'push' && github.event.pull_request.merged == true && github.ref == 'refs/heads/main'
         run: make push
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
