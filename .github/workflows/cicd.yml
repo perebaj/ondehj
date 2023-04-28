@@ -3,7 +3,6 @@ name: Docker Image CI
 # only trigger on pull request closed events
 on:
   pull_request:
-    types: [closed]
     branches: ["main"]
 jobs:
   test:
