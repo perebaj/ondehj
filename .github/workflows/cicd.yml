@@ -7,7 +7,7 @@ on:
     branches: ["main"]
 
 jobs:
-  build-and-publish:
+  test-build-and-publish:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,8 +16,10 @@ jobs:
       - name: Run Tests
         run: make test
       - name: Build the Docker image
+        if: github.event_name == 'push' && github.event.pull_request.merged == true
         run: make image
       - name: Push the Docker image
+        if: github.event_name == 'push' && github.event.pull_request.merged == true
         run: make push
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
