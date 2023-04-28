@@ -1,6 +1,9 @@
 name: Docker Image CI
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   # test:
@@ -13,7 +16,7 @@ jobs:
   #       run: make test
 
   build-and-publish:
-    if: github.event_name == 'push' && github.event.pull_request.merged == true && github.ref == 'refs/heads/main'
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
