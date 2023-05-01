@@ -1,0 +1,160 @@
+openapi: 3.0.0
+info:
+  title: Onde hoje? API
+  version: "1.0.0"
+  description: Backend to service underground events
+
+paths:
+  /event:
+    post:
+      tags:
+        - "event"
+      summary: Create a new event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventRequest"
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+    get:
+      summary: Get all events
+      tags:
+        - "event"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventResponse"
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+  /event/{id}:
+    delete:
+      summary: Delete an event
+      tags:
+        - "event"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+    get:
+      summary: Get an event
+      tags:
+        - "event"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventResponse"
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+    put:
+      summary: Update an event
+      tags:
+        - "event"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventRequest"
+      responses:
+        "200":
+          description: Update an event by id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventResponse"
+        "500":
+          description: Internal Server Error
+components:
+  schemas:
+    EventRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        instagram_page:
+          type: string
+    EventResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        instagram_page:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
