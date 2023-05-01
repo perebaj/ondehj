@@ -25,6 +25,8 @@ type Settings struct {
 	DatabaseUser     string
 	DatabasePassword string
 	ServicePort      string
+	DatabaseName     string
+	SSLMode          string
 }
 
 // centralize all settings in a single struct
@@ -33,16 +35,20 @@ var settings = Settings{
 	DatabasePort:     getEnvWithDefault("POSTGRES_PORT", "5432"),
 	DatabaseUser:     getEnvWithDefault("POSTGRES_USER", "postgres"),
 	DatabasePassword: getEnvWithDefault("POSTGRES_PASSWORD", "example_password"),
-	ServicePort:      getEnvWithDefault("SERVICE_PORT", "8000"),
+	ServicePort:      getEnvWithDefault("PORT", "8000"),
+	DatabaseName:     getEnvWithDefault("POSTGRES_DB", "example_db"),
+	SSLMode:          getEnvWithDefault("POSTGRES_SSLMODE", "disable"),
 }
 
 func main() {
 	databaseUrl := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/example_db?sslmode=disable",
+		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
 		settings.DatabaseUser,
 		settings.DatabasePassword,
 		settings.DatabaseHost,
 		settings.DatabasePort,
+		settings.DatabaseName,
+		settings.SSLMode,
 	)
 	slog.Info(slog.LevelInfo.String())
 	handler := slog.HandlerOptions{AddSource: true, Level: slog.LevelInfo}.NewJSONHandler(os.Stdout)
