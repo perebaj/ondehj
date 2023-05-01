@@ -1,7 +1,9 @@
 # ondehj
 
+A single place to share the underground
 
 
+# API Curl commands
 
 ```go
 go run cmd/ondehoje/main.go
@@ -38,9 +40,8 @@ curl -X PUT \
 
 ```
 
-## Database approach
 
-## Core Concepts 
+# Core Concepts 
 * API
 * Database
 * Database Migration
@@ -48,3 +49,13 @@ curl -X PUT \
 * Dev Container environment
 * Go Unit test
 * Metrics
+
+# Database
+
+Before connect to postgres database have certantly that you have [Heroku CLI installed](https://devcenter.heroku.com/articles/heroku-cli)
+
+```bash
+sudo apt-get install postgresql  #to install psql
+
+heroku pg:psql -a ondehoje # to access database and execute admin commands
+```

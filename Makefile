@@ -5,7 +5,7 @@ POSTGRES_VERSION := 14
 GOLANGCI_LINT_VERSION=v1.51.2
 
 version=$(shell git rev-parse --short HEAD)
-image := perebaj/ondehj:$(version)
+image := registry.heroku.com/ondehoje/web:$(version)
 devimage :=ondehoje-dev
 
 # To avoid downloading deps everytime it runs on containers
@@ -29,11 +29,19 @@ image:
 	--build-arg GO_VERSION=$(GO_VERSION) \
 	-t ${image} 
 
+HEROKU_TOKEN=$(shell heroku auth:token)
+
 ## Push image service
 .PHONY: publish
-push:
-	docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+publish:
+	docker login --username=perebaj@gmail.com --password=${HEROKU_TOKEN} registry.heroku.com
 	docker push ${image}
+
+
+## Deploy ondehoje service on heroku
+.PHONY: heroku/release
+heroku/release:
+	heroku container:release web --app ondehoje
 
 ## Run ondehoje service
 .PHONY: run
@@ -50,9 +58,6 @@ dev/start:
 dev/restart:
 	POSTGRES_VERSION=${POSTGRES_VERSION} GO_VERSION=${GO_VERSION} docker-compose restart
 
-.PHONY: dev/logs
-dev/logs:
-	docker-compose logs -f app
 
 ## Stop and remove containers
 .PHONY: dev/stop

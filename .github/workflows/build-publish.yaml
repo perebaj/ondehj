@@ -10,10 +10,16 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v2
+      - name: Heroku Login
+        uses: akhileshns/heroku-deploy@v3.12.13 # This is the action
+        with:
+          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_app_name: "ondehoje"
+          heroku_email: "perebaj@gmail.com"
+          justlogin: true
       - name: Build the Docker image
         run: make image
       - name: Push the Docker image
         run: make publish
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Release
+        run: make heroku/release
