@@ -3,6 +3,10 @@
   <p style="font-family: 'Lato', sans-serif; font-size: 16px;">A Single place to share the underground</p>
 </p>
 
+Onde Hoje is an innovative application that allows users to share underground events in their city. This app is designed for people who are looking for unique experiences and want to explore the hidden gems of their city.
+With Onde Hoje, users can find events that are not advertised on mainstream platforms such as Facebook or Instagram. This app is perfect for those who want to discover new artists, musicians, and performers before they become mainstream.
+
+
 <p>
   <img src="./assets/under.png" alt="image_alt_text">
 </p>
