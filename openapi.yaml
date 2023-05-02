@@ -8,7 +8,7 @@ paths:
   /event:
     post:
       tags:
-        - "event"
+        - "Event"
       summary: Create a new event
       requestBody:
         required: true
@@ -26,7 +26,7 @@ paths:
     get:
       summary: Get all events
       tags:
-        - "event"
+        - "Event"
       requestBody:
         required: true
         content:
@@ -50,7 +50,7 @@ paths:
     delete:
       summary: Delete an event
       tags:
-        - "event"
+        - "Event"
       parameters:
         - name: id
           in: path
@@ -68,7 +68,7 @@ paths:
     get:
       summary: Get an event
       tags:
-        - "event"
+        - "Event"
       parameters:
         - name: id
           in: path
@@ -90,7 +90,7 @@ paths:
     put:
       summary: Update an event
       tags:
-        - "event"
+        - "Event"
       parameters:
         - name: id
           in: path
