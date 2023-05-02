@@ -59,3 +59,8 @@ sudo apt-get install postgresql  #to install psql
 
 heroku pg:psql -a ondehoje # to access database and execute admin commands
 ```
+
+
+# Useful Vscode extensions
+
+[OpenAPI Swagger Editor](https://42crunch.com/tutorial-openapi-swagger-extension-vs-code/)

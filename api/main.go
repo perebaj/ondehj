@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/perebaj/ondehj/event"
@@ -221,6 +222,11 @@ func HandlerFactory(db *pgxpool.Pool) http.Handler {
 	router.HandleFunc(eventPathId, deleteEventHandler(eventSQLRepo)).Methods(http.MethodDelete)
 	router.HandleFunc(eventPathId, getByIDHandler(eventSQLRepo)).Methods(http.MethodGet)
 	router.HandleFunc(eventPathId, Update(eventSQLRepo)).Methods(http.MethodPut)
+	// documentation for developers
+	opts := middleware.SwaggerUIOpts{SpecURL: "openapi.yaml"}
+	sh := middleware.SwaggerUI(opts, nil)
+	router.Handle("/docs", sh)
+	router.Handle("/openapi.yaml", http.FileServer(http.Dir("./")))
 
 	return router
 }
