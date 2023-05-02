@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: Onde hoje? API
   version: "1.0.0"
-  description: Backend to service underground events
+  description: Backend to serve underground events
 
 paths:
   /event:
