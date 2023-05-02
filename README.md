@@ -1,47 +1,39 @@
-# ondehj
+<p align="center" style="font-size: 24px; font-family: Arial, sans-serif;">
+  <h1 style="font-family: 'Playfair Display', serif; font-size: 36px;">Onde Hoje ?</h1>
+  <p style="font-family: 'Lato', sans-serif; font-size: 16px;">A Single place to share the underground</p>
+</p>
 
-A single place to share the underground
+<p>
+  <img src="./assets/under.png" alt="image_alt_text">
+</p>
 
 
-# API Curl commands
+
+
+
+To run the API locally and start shipping 🚢 new features is easy:
+
+
+```bash
+# start running the development environment. For now, a PostgreSQL database.
+make dev/start
+```
+
+After that, to run the API, apply the command:
 
 ```go
 go run cmd/ondehoje/main.go
 ```
 
-getall
-```bash
-curl -XGET http://localhost:8000/event | jq 
-```
+# API Requests
 
-create
-```bash
-curl -X POST -H "Content-Type: application/json" -d '{"Title":"Example Event","Description":"This is an example event.","Location":"New York City","StartTime":"2023-04-20T11:30:27.747223-04:00","EndTime":"2023-04-20T12:30:27.747223-04:00","InstagramPage":"example_event"}' -i http://localhost:8000/event
-```
-
-delete
-```bash
-curl -X DELETE -i http://localhost:8000/event/{id} 
-```
-
-update
-```bash
-curl -X PUT \
-  -i http://localhost:8000/event/2 \
-  -H 'Content-Type: application/json' \
-  -d '{
-        "title": "Novo título",
-        "description": "Nova descrição",
-        "location": "Nova localização",
-        "start_time": "2023-05-01T10:00:00Z",
-        "end_time": "2023-05-01T12:00:00Z",
-        "instagram_page": "nova_pagina"
-      }'
-
-```
+Just access your browser at http://localhost:8000/docs. That's it, all routes grouped in one place!
 
 
-# Core Concepts 
+# Core Concepts
+Some concepts that this simple API will build under:
+
+
 * API
 * Database
 * Database Migration
@@ -49,10 +41,11 @@ curl -X PUT \
 * Dev Container environment
 * Go Unit test
 * Metrics
+* Swagger/OpenAPI
 
-# Database
+# Heroku Database
 
-Before connect to postgres database have certantly that you have [Heroku CLI installed](https://devcenter.heroku.com/articles/heroku-cli)
+Before connecting to the PostgreSQL database, make sure you have the [Heroku CLI installed](https://devcenter.heroku.com/articles/heroku-cli)
 
 ```bash
 sudo apt-get install postgresql  #to install psql
@@ -60,6 +53,18 @@ sudo apt-get install postgresql  #to install psql
 heroku pg:psql -a ondehoje # to access database and execute admin commands
 ```
 
+# Ship New code to production
+
+Although there is a CI for that, it's possible to SHIP🚀 new code to production just using your machine.
+
+Just run the following commands, in this order, and be happy😃:
+
+```
+make image
+make publish
+make heroku/release
+
+```
 
 # Useful Vscode extensions
 
