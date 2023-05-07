@@ -31,6 +31,7 @@ type Repository interface {
 	All(ctx context.Context) ([]Event, error)
 	GetByID(ctx context.Context, id int64) (*Event, error)
 	Update(ctx context.Context, id int64, newEvent Event) (*Event, error)
+	DeleteAll(ctx context.Context) error
 }
 
 type SQLRepository struct {
@@ -39,6 +40,14 @@ type SQLRepository struct {
 
 func EventSQLRepository(db *pgxpool.Pool) *SQLRepository {
 	return &SQLRepository{db: db}
+}
+
+func (r *SQLRepository) DeleteAll(ctx context.Context) error {
+	_, err := r.db.Exec(ctx, `DELETE FROM events`)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *SQLRepository) Update(ctx context.Context, id int64, newEvent Event) (*Event, error) {

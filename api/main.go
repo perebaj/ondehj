@@ -18,6 +18,27 @@ const (
 	eventPathId = "/event/{id}"
 )
 
+func deleteAllEventsHandler(eventRepo event.Repository) http.HandlerFunc {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		slog.Info("Calling deleteAll")
+		if r.Method != http.MethodDelete {
+			slog.Error("Method not allowed")
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		slog.Info("Deleting all events")
+		err := eventRepo.DeleteAll(r.Context())
+		if err != nil {
+			slog.Error("Delete failed", "error", err)
+			http.Error(w, "Delete failed", http.StatusInternalServerError)
+			return
+		}
+		slog.Info("Events deleted successfully")
+	}
+	return http.HandlerFunc(fn)
+}
+
 func deleteEventHandler(eventRepo event.Repository) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("Calling deleteEventHandler")
@@ -222,6 +243,7 @@ func HandlerFactory(db *pgxpool.Pool) http.Handler {
 	router.HandleFunc(eventPathId, deleteEventHandler(eventSQLRepo)).Methods(http.MethodDelete)
 	router.HandleFunc(eventPathId, getByIDHandler(eventSQLRepo)).Methods(http.MethodGet)
 	router.HandleFunc(eventPathId, Update(eventSQLRepo)).Methods(http.MethodPut)
+	router.HandleFunc(eventPath, deleteAllEventsHandler(eventSQLRepo)).Methods(http.MethodDelete) // this function will not be exposed in the swagger
 	// documentation for developers
 	opts := middleware.SwaggerUIOpts{SpecURL: "openapi.yaml"}
 	sh := middleware.SwaggerUI(opts, nil)

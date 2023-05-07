@@ -1,6 +1,6 @@
 <p align="center" style="font-size: 24px; font-family: Arial, sans-serif;">
   <h1 style="font-family: 'Playfair Display', serif; font-size: 36px;">Onde Hoje ?</h1>
-  <p style="font-family: 'Lato', sans-serif; font-size: 16px;">A Single place to share the underground</p>
+  <p style="font-family: 'Lato', sans-serif; font-size: 16px;">Uncovering the Underground</p>
 </p>
 
 Onde Hoje is an innovative application that allows users to share underground events in their city. This app is designed for people who are looking for unique experiences and want to explore the hidden gems of their city.
@@ -56,7 +56,11 @@ sudo apt-get install postgresql  #to install psql
 
 heroku pg:psql -a ondehoje # to access database and execute admin commands
 ```
-
+## Local Database 
+Pass: example_password
+```bash
+psql -h localhost -p 5432 -d example_db -U postgres
+```
 # Ship New code to production
 
 Although there is a CI for that, it's possible to SHIP🚀 new code to production just using your machine.
@@ -68,6 +72,12 @@ make image
 make publish
 make heroku/release
 
+```
+
+# Load Test
+
+```
+k6 run --vus 10 --duration 30s load-test/create-event.js
 ```
 
 # Useful Vscode extensions

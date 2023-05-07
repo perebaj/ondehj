@@ -41,7 +41,7 @@ publish:
 ## Deploy ondehoje service on heroku
 .PHONY: heroku/release
 heroku/release:
-	heroku container:release web --app ondehoje
+	heroku container:release web --app ondehoje ${image}
 
 ## Run ondehoje service
 .PHONY: run
