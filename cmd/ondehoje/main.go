@@ -31,6 +31,7 @@ type Settings struct {
 }
 
 // centralize all settings in a single struct
+//TODO(jojo): Remvoe the broken env vars to a single database url
 var settings = Settings{
 	DatabaseHost:     getEnvWithDefault("POSTGRES_HOST", "localhost"),
 	DatabasePort:     getEnvWithDefault("POSTGRES_PORT", "5432"),

@@ -35,7 +35,7 @@ func deleteEventHandler(eventRepo event.Repository) http.HandlerFunc {
 		}
 
 		log.Info().Msgf("Getting event with id: %d", id)
-		_, err = eventRepo.GetByID(r.Context(), id)
+		_, err = eventRepo.GetByID(r.Context(), id, log)
 		if err != nil {
 			log.Err(err).Msg("Event doesn't exist")
 			http.Error(w, "Event doesn't exist", http.StatusNotFound)
@@ -43,7 +43,7 @@ func deleteEventHandler(eventRepo event.Repository) http.HandlerFunc {
 		}
 
 		log.Info().Msgf("Deleting event with id: %d", id)
-		err = eventRepo.Delete(r.Context(), id)
+		err = eventRepo.Delete(r.Context(), id, log)
 
 		if err != nil {
 			log.Err(err).Msg("Delete failed")
@@ -82,7 +82,7 @@ func postCreateEventHandler(eventRepo event.Repository) http.HandlerFunc {
 		}
 
 		log.Info().Msg("Creating event")
-		createdEvent, err := eventRepo.Create(r.Context(), requestEvent)
+		createdEvent, err := eventRepo.Create(r.Context(), requestEvent, log)
 		if err != nil {
 			log.Err(err).Msg("Error creating new Event")
 			w.WriteHeader(http.StatusInternalServerError)
@@ -111,7 +111,7 @@ func getAllEventsHandler(eventRepo event.Repository) http.HandlerFunc {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		events, err := eventRepo.All(r.Context())
+		events, err := eventRepo.All(r.Context(), log)
 		if err != nil {
 			log.Err(err).Msg("Error retrieving events")
 			log.Error().AnErr("error", err)
@@ -148,7 +148,7 @@ func getByIDHandler(eventRepo event.Repository) http.HandlerFunc {
 			return
 		}
 
-		event, err := eventRepo.GetByID(r.Context(), id)
+		event, err := eventRepo.GetByID(r.Context(), id, log)
 		if err != nil {
 			log.Err(err).Msg("Event not found")
 			http.Error(w, "Event not found", http.StatusNotFound)
@@ -191,13 +191,13 @@ func Update(eventRepo event.Repository) http.HandlerFunc {
 			return
 		}
 
-		_, err = eventRepo.GetByID(r.Context(), id)
+		_, err = eventRepo.GetByID(r.Context(), id, log)
 		if err != nil {
 			log.Err(err).Msg("Event not found")
 			http.Error(w, "Event not found", http.StatusNotFound)
 			return
 		}
-		updatedEvent, err := eventRepo.Update(r.Context(), id, newEvent)
+		updatedEvent, err := eventRepo.Update(r.Context(), id, newEvent, log)
 		if err != nil {
 			log.Err(err).Msg("Update failed")
 			http.Error(w, "Update failed", http.StatusInternalServerError)
@@ -218,16 +218,15 @@ func Update(eventRepo event.Repository) http.HandlerFunc {
 
 func HandlerFactory(db *pgxpool.Pool) http.Handler {
 	//Group all handler of the API and return a http.Handler
-	router := mux.NewRouter()
-	eventSQLRepo := event.EventSQLRepository(db)
-
 	//structured logs
 	logger := httplog.NewLogger("http", httplog.Options{
-		JSON:     true,
+		JSON:     false,
 		LogLevel: "info",
 		Concise:  true,
 	})
 	httpLogMiddleware := httplog.RequestLogger(logger)
+	router := mux.NewRouter()
+	eventSQLRepo := event.EventSQLRepository(db)
 
 	//event
 	router.Use(httpLogMiddleware)

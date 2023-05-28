@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/rs/zerolog"
 )
 
 var (
@@ -25,12 +25,12 @@ type Event struct {
 }
 
 type Repository interface {
-	Create(ctx context.Context, event Event) (*Event, error)
+	Create(ctx context.Context, event Event, log zerolog.Logger) (*Event, error)
 	Migrate() error
-	Delete(ctx context.Context, id int64) error
-	All(ctx context.Context) ([]Event, error)
-	GetByID(ctx context.Context, id int64) (*Event, error)
-	Update(ctx context.Context, id int64, newEvent Event) (*Event, error)
+	Delete(ctx context.Context, id int64, log zerolog.Logger) error
+	All(ctx context.Context, log zerolog.Logger) ([]Event, error)
+	GetByID(ctx context.Context, id int64, log zerolog.Logger) (*Event, error)
+	Update(ctx context.Context, id int64, newEvent Event, log zerolog.Logger) (*Event, error)
 }
 
 type SQLRepository struct {
@@ -41,7 +41,7 @@ func EventSQLRepository(db *pgxpool.Pool) *SQLRepository {
 	return &SQLRepository{db: db}
 }
 
-func (r *SQLRepository) Update(ctx context.Context, id int64, newEvent Event) (*Event, error) {
+func (r *SQLRepository) Update(ctx context.Context, id int64, newEvent Event, log zerolog.Logger) (*Event, error) {
 
 	err := r.db.QueryRow(ctx,
 		`UPDATE events SET title = $1, description = $2, location = $3, instagram_page = $4, start_time = $5, end_time = $6 WHERE id = $7 RETURNING id`,
@@ -49,33 +49,33 @@ func (r *SQLRepository) Update(ctx context.Context, id int64, newEvent Event) (*
 		&newEvent.ID)
 
 	if err != nil {
-		log.Println(err)
+		log.Err(err).Msg("Update failed")
 		return nil, err
 	}
 	return &newEvent, nil
 
 }
 
-func (r *SQLRepository) GetByID(ctx context.Context, id int64) (*Event, error) {
+func (r *SQLRepository) GetByID(ctx context.Context, id int64, log zerolog.Logger) (*Event, error) {
 	var event Event
 	err := r.db.QueryRow(
 		ctx,
 		`SELECT id, title, description, location, start_time, end_time, instagram_page FROM events WHERE id = $1`, id).Scan(&event.ID, &event.Title, &event.Description, &event.Location, &event.StartTime, &event.EndTime, &event.InstagramPage)
 
 	if err != nil {
-		log.Println(err)
+		log.Err(err).Msg("GetByID failed")
 		return nil, err
 	}
 	return &event, nil
 }
 
-func (r *SQLRepository) Create(ctx context.Context, event Event) (*Event, error) {
+func (r *SQLRepository) Create(ctx context.Context, event Event, log zerolog.Logger) (*Event, error) {
 	var id int64
 	err := r.db.QueryRow(ctx, `
 		INSERT INTO events (title, description, location, instagram_page, start_time, end_time) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
 		event.Title, event.Description, event.Location, event.InstagramPage, event.StartTime, event.EndTime).Scan(&id)
 	if err != nil {
-		log.Println(err)
+		log.Err(err).Msg("Create failed")
 		return nil, err
 	}
 	event.ID = id
@@ -99,7 +99,7 @@ func (r *SQLRepository) Migrate() error {
 	return err
 }
 
-func (r *SQLRepository) Delete(ctx context.Context, id int64) error {
+func (r *SQLRepository) Delete(ctx context.Context, id int64, log zerolog.Logger) error {
 	res, err := r.db.Exec(ctx, `DELETE FROM events WHERE id = $1`, id)
 	rowsAffcected := res.RowsAffected()
 	if rowsAffcected == 0 {
@@ -108,7 +108,8 @@ func (r *SQLRepository) Delete(ctx context.Context, id int64) error {
 	return err
 }
 
-func (r *SQLRepository) All(ctx context.Context) ([]Event, error) {
+func (r *SQLRepository) All(ctx context.Context, log zerolog.Logger) ([]Event, error) {
+	log.Info().Msg("Get All database connection")
 	rows, err := r.db.Query(ctx, `SELECT * FROM events`)
 	if err != nil {
 		return nil, err
@@ -119,6 +120,7 @@ func (r *SQLRepository) All(ctx context.Context) ([]Event, error) {
 		var event Event
 		err = rows.Scan(&event.ID, &event.Title, &event.Description, &event.Location, &event.StartTime, &event.EndTime, &event.InstagramPage)
 		if err != nil {
+			log.Err(err).Msg("Get All events failed")
 			return nil, err
 		}
 		events = append(events, event)
