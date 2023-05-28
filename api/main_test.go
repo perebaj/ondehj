@@ -12,6 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/perebaj/ondehj/event"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -24,23 +25,23 @@ func NewMockSQLRepository() *MockSQLRepository {
 	return &MockSQLRepository{}
 }
 
-func (m *MockSQLRepository) Create(a context.Context, b event.Event) (*event.Event, error) {
+func (m *MockSQLRepository) Create(a context.Context, b event.Event, log zerolog.Logger) (*event.Event, error) {
 	args := m.Called(a, b)
 	return args.Get(0).(*event.Event), args.Error(1)
 }
 
-func (m *MockSQLRepository) Update(ctx context.Context, id int64, newEvent event.Event) (*event.Event, error) {
+func (m *MockSQLRepository) Update(ctx context.Context, id int64, newEvent event.Event, log zerolog.Logger) (*event.Event, error) {
 	args := m.Called(ctx, id, newEvent)
 	return args.Get(0).(*event.Event), args.Error(1)
 }
 
-func (m *MockSQLRepository) GetByID(ctx context.Context, id int64) (*event.Event, error) {
+func (m *MockSQLRepository) GetByID(ctx context.Context, id int64, log zerolog.Logger) (*event.Event, error) {
 	args := m.Called(ctx, id)
 	return args.Get(0).(*event.Event), args.Error(1)
 
 }
 
-func (m *MockSQLRepository) Delete(ctx context.Context, id int64) error {
+func (m *MockSQLRepository) Delete(ctx context.Context, id int64, log zerolog.Logger) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
@@ -50,18 +51,18 @@ func (m *MockSQLRepository) Migrate() error {
 	return args.Error(0)
 }
 
-func (m *MockSQLRepository) All(ctx context.Context) ([]event.Event, error) {
+func (m *MockSQLRepository) All(ctx context.Context, log zerolog.Logger) ([]event.Event, error) {
 	args := m.Called(ctx)
 	return args.Get(0).([]event.Event), args.Error(1)
 }
 
 type MockEvent interface {
-	Create(ctx context.Context, event event.Event) (*event.Event, error)
-	Update(ctx context.Context, id int64, newEvent event.Event) (*event.Event, error)
-	GetByID(ctx context.Context, id int64) (*event.Event, error)
-	Delete(ctx context.Context, id int64) error
+	Create(ctx context.Context, event event.Event, log zerolog.Logger) (*event.Event, error)
+	Update(ctx context.Context, id int64, newEvent event.Event, log zerolog.Logger) (*event.Event, error)
+	GetByID(ctx context.Context, id int64, log zerolog.Logger) (*event.Event, error)
+	Delete(ctx context.Context, id int64, log zerolog.Logger) error
 	Migrate() error
-	All(ctx context.Context) ([]event.Event, error)
+	All(ctx context.Context, log zerolog.Logger) ([]event.Event, error)
 }
 
 func Test_postCreateEventHandler(t *testing.T) {
