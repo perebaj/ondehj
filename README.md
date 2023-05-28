@@ -47,6 +47,9 @@ Some concepts that this simple API will build under:
 * Metrics
 * Swagger/OpenAPI
 
+## Structured Logs
+It's important for each route that will be created, to pay attention to instantiate the right context logs and pass this object forward for each chain of code, including thirty implementations, like database interaction. The current routes already are following this pattern.
+
 # Heroku Database
 
 Before connecting to the PostgreSQL database, make sure you have the [Heroku CLI installed](https://devcenter.heroku.com/articles/heroku-cli)

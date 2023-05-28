@@ -38,6 +38,11 @@ publish:
 	docker push ${image}
 
 
+## Run ondehoje service
+.PHONY: app
+app:
+	go run cmd/ondehoje/main.go
+
 ## Deploy ondehoje service on heroku
 .PHONY: heroku/release
 heroku/release:
