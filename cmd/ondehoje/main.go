@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool" // concurrency safe
 	"github.com/perebaj/ondehj/api"
@@ -70,7 +71,13 @@ func main() {
 
 	mux := api.HandlerFactory(dbpool)
 	slog.Info(fmt.Sprintf("Starting server on port %s", settings.ServicePort))
-	err = http.ListenAndServe(fmt.Sprintf(":%s", settings.ServicePort), mux)
+	srv := http.Server{
+		Addr:         fmt.Sprintf(":%s", settings.ServicePort),
+		Handler:      mux,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
+	}
+	err = srv.ListenAndServe()
 	if err != nil {
 		slog.Error(fmt.Sprintf("Unable to start server: %v", err))
 		os.Exit(1)
