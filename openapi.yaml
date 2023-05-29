@@ -1,14 +1,14 @@
 openapi: 3.0.0
 info:
   title: Onde hoje? API
-  version: "1.0.0"
+  version: "1.0.1"
   description: Backend to serve underground events
 
 paths:
-  /event:
+  /events:
     post:
       tags:
-        - "Event"
+        - "Events"
       summary: Create a new event
       requestBody:
         required: true
@@ -26,13 +26,7 @@ paths:
     get:
       summary: Get all events
       tags:
-        - "Event"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/EventRequest"
+        - "Events"
       responses:
         "200":
           description: OK
@@ -42,15 +36,15 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/EventResponse"
-        "400":
-          description: Bad Request
+        "405":
+          description: Method Not Allowed
         "500":
           description: Internal Server Error
-  /event/{id}:
+  /events/{id}:
     delete:
       summary: Delete an event
       tags:
-        - "Event"
+        - "Events"
       parameters:
         - name: id
           in: path
@@ -59,16 +53,14 @@ paths:
             type: integer
             format: int64
       responses:
-        "204":
-          description: No Content
-        "400":
-          description: Bad Request
+        "405":
+          description: Method Not Allowed
         "500":
           description: Internal Server Error
     get:
       summary: Get an event
       tags:
-        - "Event"
+        - "Events"
       parameters:
         - name: id
           in: path
@@ -84,13 +76,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/EventResponse"
         "400":
-          description: Bad Request
+          description: Bad Request. Invalid Id. Event not found
+        "405":
+          description: Method Not Allowed
         "500":
           description: Internal Server Error
     put:
       summary: Update an event
       tags:
-        - "Event"
+        - "Events"
       parameters:
         - name: id
           in: path

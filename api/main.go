@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	eventPath   = "/event"
-	eventPathId = "/event/{id}"
+	eventPath   = "/events"
+	eventPathId = "/events/{id}"
 )
 
 func deleteEventHandler(eventRepo event.Repository) http.HandlerFunc {
